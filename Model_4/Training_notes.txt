@@ -1,0 +1,84 @@
+last model
+
+arsitektur :
+def create_model(num_classes, dropout):
+    model = models.alexnet(pretrained = True)
+
+    for param in model.parameters() :
+        param.requires_grad = False
+
+    model.classifier = nn.Sequential(
+        nn.Dropout(p=dropout),
+        nn.Linear(256 * 6 * 6, 4096),
+        nn.ReLU(inplace=True),
+        nn.BatchNorm1d(4096),
+        nn.Dropout(p=dropout),
+        nn.Linear(4096, 1024),
+        nn.ReLU(inplace=True),
+        nn.BatchNorm1d(1024),
+        nn.Dropout(p=dropout),
+        nn.Linear(1024, num_classes),
+    )
+
+    return model
+
+catetan model :
+- freeze semua layer conv (karena dataset kecil)
+- variasi dropout utk hyperparameter tuning
+- batch size sebesar 32
+
+catetan tuning
+learning_rates = [0.01, 0.001, 0.0001]
+optimizers = ['SGD', 'Adam']
+batch_Sizes = [32]
+dropout_rates = [0.5, 0.6]
+
+hasil :
+
+waktu training : 50 menit
+
+Best Parameters: {'learning_rate': 0.0001, 'optimizer': 'Adam', 'dropout_rate': 0.5}
+Best Validation Accuracy: 0.8529
+
+model   |   optimizer   |   learning_rate   |   dropout |   val_accs    |   test_accs
+1       |     SGD       |       0.01        |     0.5   |     67.65%    |   88.24%
+2       |     SGD       |       0.01        |     0.6   |     82.35%    |   64.71%
+3       |     Adam      |       0.01        |     0.5   |     79.41%    |   88.24%
+4       |     Adam      |       0.01        |     0.6   |     79.41%    |   97.06%
+5       |     SGD       |       0.001       |     0.5   |     82.35%    |   85.29%
+6       |     SGD       |       0.001       |     0.6   |     73.53%    |   85.29%
+7       |     Adam      |       0.001       |     0.5   |     79.41%    |   91.18%
+8       |     Adam      |       0.001       |     0.6   |     79.41%    |   94.12%
+9       |     SGD       |       0.0001      |     0.5   |     67.65%    |   70.59%
+10      |     SGD       |       0.0001      |     0.6   |     50.00%    |   55.88%
+11      |     Adam      |       0.0001      |     0.5   |     85.29%    |   94.12%
+12      |     Adam      |       0.0001      |     0.6   |     76.47%    |   88.24%
+
+kesimpulan sementara :
+- kelas "menggulung" ada problem (kemungkinan karena data terlalu sedikit, potensi outlier)
+
+
+training ke-2 :
+perubahan batch size jadi 16
+alasan : cocok utk dataset ukuran kecil, penggunaan memori lebih sedikit (limitasi VRAM dari GPU)
+
+hasil :
+
+waktu training : 55 menit
+
+Best Parameters: {'learning_rate': 0.001, 'optimizer': 'Adam', 'dropout_rate': 0.5}
+Best Validation Accuracy: 0.8529
+
+model   |   optimizer   |   learning_rate   |   dropout |   val_accs    |   test_accs
+1       |     SGD       |       0.01        |     0.5   |     73.53%    |   73.53%
+2       |     SGD       |       0.01        |     0.6   |     70.59%    |   64.71%
+3       |     Adam      |       0.01        |     0.5   |     79.41%    |   82.35%
+4       |     Adam      |       0.01        |     0.6   |     73.53%    |   82.35%
+5       |     SGD       |       0.001       |     0.5   |     82.35%    |   82.35%
+6       |     SGD       |       0.001       |     0.6   |     67.65%    |   85.29%
+7       |     Adam      |       0.001       |     0.5   |     85.29%    |   91.18%
+8       |     Adam      |       0.001       |     0.6   |     85.29%    |   94.12%
+9       |     SGD       |       0.0001      |     0.5   |     58.82%    |   76.47%
+10      |     SGD       |       0.0001      |     0.6   |     52.94%    |   76.47%
+11      |     Adam      |       0.0001      |     0.5   |     79.41%    |   94.18%
+12      |     Adam      |       0.0001      |     0.6   |     70.59%    |   82.35%
